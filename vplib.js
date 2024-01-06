@@ -39,7 +39,7 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 	}
 
 	var appdata = {
-		title: "visual-planner",
+		title: "visual-planner 1.0",
 		month_count: 6,
 		scroll_buffer: 6,
 		auto_scroll: true,

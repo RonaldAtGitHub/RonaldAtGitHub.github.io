@@ -40,12 +40,10 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 
 	var appdata = {
 		title: "visual-planner",
-		month_count: 6,
 		week_count: 52,
 		scroll_buffer: 52,
 		auto_scroll: true,
 		auto_scroll_offset: -1,
-		first_month: 1,
 		first_week: 1,
 		hide_scrollbars: false,
 		same_row_height: false,
@@ -1068,12 +1066,12 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 			if (cfg.hide_scrollbars) {
 				if (view.column) {
-					var colwidth = (scrollbox.offsetWidth / cfg.month_count);
+					var colwidth = (scrollbox.offsetWidth / cfg.week_count);
 					scrollbox.scrollBy(evt.deltaY > 0 ? colwidth : -colwidth, 0);
 				}
 
 				if (view.list) {
-					var colheight = (scrollbox.offsetHeight / cfg.month_count);
+					var colheight = (scrollbox.offsetHeight / cfg.week_count);
 					scrollbox.scrollBy(0, evt.deltaY > 0 ? colheight : -colheight);
 				}
 

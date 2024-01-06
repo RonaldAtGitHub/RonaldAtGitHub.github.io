@@ -883,7 +883,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		function loadPage() {
 			var vdtPage = new VpDate(vdt);
 			//vdtPage.offsetWeek(-buffer);
-
+debugger;
 			vpDiary.makePage(vdtPage, pagelength);
 			$scope.vpgrid.page = vpDiary.getPage();
 			$scope.vpgrid.gridareas = getGridAreas($scope.vpgrid.page);
@@ -1274,7 +1274,7 @@ function VpDateWeek(yyyy, ww) {
 	}
 	else {
 		var today = new Date;
-		this.dt = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+		this.dt = new Date(today.getFullYear(), today.getMonth());
 	}
 }
 

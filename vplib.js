@@ -950,21 +950,21 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		}
 
 		function initDate() {
-			vdt = new VpDateMonth;
+			vdt = new VpDateWeek;
 
 			if (cfg.auto_scroll) {
-				vdt.offsetMonth(cfg.auto_scroll_offset);
+				vdt.offsetWeek(cfg.auto_scroll_offset);
 			}
 			else {
-				var off = ((cfg.first_month-1) - new Date().getMonth());
+				var off = ((cfg.first_month-1) - new Date().getWeek());
 				if (off > 0) off -= 12;
-				vdt.offsetMonth(off);
+				vdt.offsetWeek(off);
 			}
 		}
 
 		function loadPage() {
 			var vdtPage = new VpDate(vdt);
-			vdtPage.offsetMonth(-buffer);
+			vdtPage.offsetWeek(-buffer);
 
 			vpDiary.makePage(vdtPage, pagelength);
 			$scope.vpgrid.page = vpDiary.getPage();
@@ -1090,7 +1090,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 			hideGrid();
 			$timeout(function() {
 				var visinfo = getVisInfo();
-				vdt.offsetMonth(visinfo.index - buffer);
+				vdt.offsetWeek(visinfo.index - buffer);
 				loadPage();
 			});
 		}
@@ -1226,6 +1226,15 @@ VpDate.prototype.offsetMonth = function(off) {
 	this.dt.setMonth(this.dt.getMonth() + off);
 }
 
+VpDate.prototype.offsetWeek = function(off) {
+
+	let w = this.dt.getWeek() + off;
+	var d = (1 + (w - 1) * 7); // 1st of January + 7 days for each week
+	let dateWeek = new Date(this.dt.getFullYear() , 0, d);
+
+	this.dt.setDate(dateWeek);
+}
+
 VpDate.prototype.toStartOfWeek = function(startday) {
 	while (this.dt.getDay() != startday)
 		this.dt.setDate(this.dt.getDate() - 1);
@@ -1345,7 +1354,18 @@ function VpDateMonth(yyyy, mm) {
 VpDateMonth.prototype = new VpDate;
 
 
+function VpDateWeek(yyyy, ww) {
+	if (yyyy && ww) {
+		var d = (1 + (ww - 1) * 7); // 1st of January + 7 days for each week
+		this.dt =  new Date(yyyy, 0, d);
+	}
+	else {
+		var today = new Date;
+		this.dt = new Date(today.getFullYear(), today.getMonth());
+	}
+}
 
+VpDateWeek.prototype = new VpDate;
 
 /////////////////////////////////////////////////////////////////
 

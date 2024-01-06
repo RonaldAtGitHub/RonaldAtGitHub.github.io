@@ -515,7 +515,6 @@ angular.module("vpApp").service("vpGCal", function(vpConfiguration, $rootScope, 
 angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal, $window) {
 	var cfg = $rootScope.vp.appdata;
 	var view = $rootScope.vp.gridview;
-	var vpmonths = [];
 	var vpweeks = [];
 	var vpdays = [];
 	var ymdFirst;
@@ -1274,7 +1273,8 @@ function VpDateWeek(yyyy, ww) {
 		this.dt =  new Date(yyyy, 0, d);
 	}
 	else {
-		this.dt = new Date();
+		var today = new Date;
+		this.dt = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 	}
 }
 

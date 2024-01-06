@@ -687,10 +687,10 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		$window.open("https://www.google.com/calendar/r/week/" + this.gcal);
 	}
 
-	function VpDay(vpmonth, vdt) {
+	function VpDay(vpweek, vdt) {
 		this.num = vdt.DayOfMonth();
 		this.datevalue = vdt.dt.valueOf();
-		this.month = vpmonth;
+		this.week = vpweek;
 		this.cls = {};
 
 		if (vdt.isWeekend())
@@ -699,7 +699,7 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 
 	VpDay.prototype.addEvent = function(evt, border) {
 		if ((evt.duration > 1) || (cfg.single_day_as_multi_day && !evt.timed)) {
-			this.month.addEvent(this, evt, border);
+			this.week.addEvent(this, evt, border);
 			return;
 		}
 

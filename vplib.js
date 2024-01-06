@@ -894,10 +894,10 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 				var monthdivs = box.querySelectorAll(".vpmonth");
 
 				if (view.column)
-					scrollbox.scrollTo(monthdivs[buffer].firstElementChild.offsetLeft, 0);
+					//scrollbox.scrollTo(monthdivs[buffer].firstElementChild.offsetLeft, 0);
 
 				if (view.list)
-					scrollbox.scrollTo(0, monthdivs[buffer].firstElementChild.offsetTop);
+					//scrollbox.scrollTo(0, monthdivs[buffer].firstElementChild.offsetTop);
 
 				showGrid();
 			});

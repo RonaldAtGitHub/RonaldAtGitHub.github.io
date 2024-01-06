@@ -869,9 +869,8 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 		function initDate() {
 			vdt = new VpDateWeek;
-debugger;
 			if (cfg.auto_scroll) {
-				vdt.offsetWeek(cfg.auto_scroll_offset);
+				//vdt.offsetWeek(cfg.auto_scroll_offset);
 			}
 			else {
 				var off = ((cfg.first_week-1) - new Date().getWeek());
@@ -881,6 +880,8 @@ debugger;
 		}
 
 		function loadPage() {
+
+			debugger;
 			var vdtPage = new VpDate(vdt);
 			//vdtPage.offsetWeek(-buffer);
 

@@ -41,10 +41,12 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 	var appdata = {
 		title: "visual-planner",
 		month_count: 6,
+		week_count: 52,
 		scroll_buffer: 6,
 		auto_scroll: true,
 		auto_scroll_offset: -1,
 		first_month: 1,
+		first_week: 1,
 		hide_scrollbars: false,
 		same_row_height: false,
 		align_weekends: true,
@@ -528,7 +530,6 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		vpGCal.setStartDate(vdt);
 		ymdFirst = vdt.ymd();
 
-		vpmonths = [];
 		vpweeks = [];
 		vpdays = [];
 		var vdtNext = new VpDate(vdt);
@@ -539,11 +540,6 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 			vpweeks.push(week);
 			vdtNext.offsetDay(7);
 
-			vpmonths = vpweeks;
-			// var month = new VpMonth(vdtNext);
-			// month.index = vpmonths.length;
-			// vpmonths.push(month);
-			// vdtNext.offsetMonth(1);
 			vpGCal.setEndDate(vdtNext);
 		}
 
@@ -551,11 +547,16 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	}
 
 	this.getPage = function() {
-		return vpmonths;
+		return vpweeks;
 	}
 
 	this.getMonth = function(i) {
 		return vpmonths[i];
+	}
+
+
+	this.getWeek = function(i) {
+		return vpweeks[i];
 	}
 
 	this.sync = function() {
@@ -589,9 +590,9 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	function removeEvent(id) {
 		$timeout.cancel(tmo);
 
-		var month;
-		for (month of vpmonths)
-			month.removeEvent(id);
+		var week;
+		for (week of vpweeks)
+			week.removeEvent(id);
 
 		tmo = $timeout(updateLayout, 100);
 	}
@@ -602,89 +603,9 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	}
 
 	function updateLayout() {
-		var month;
-		for (month of vpmonths)
-			month.updateLayout();
-	}
-
-	function VpMonth(vdt) {
-		this.id = "M-" + vdt.ym();
-		this.hdr = vdt.MonthTitle();
-		this.gcal = vdt.GCalURL();
-		this.year = vdt.dt.getFullYear();
-		this.days = [];
-		this.dayoffset = 0;
-		this.cls = {};
-
-		if (vdt.isPastMonth())
-			this.cls.past = true;
-
-		var vdtDay = new VpDate(vdt);
-		var m = vdtDay.getMonth();
-		while (m == vdtDay.getMonth()) {
-			var vpday = new VpDay(this, vdtDay);
-			vpday.index = this.days.length;
-
-			if (vpday.index == 0) {
-				if (cfg.align_weekends) {
-					this.dayoffset = vdtDay.DayOfWeek() - cfg.first_day_of_week;
-
-					if (this.dayoffset < 0)
-						this.dayoffset += 7;
-				}
-
-				vpday.cls["offset" + this.dayoffset] = true;
-			}
-
-			this.days.push(vpday);
-			vpdays.push(vpday);
-
-			vdtDay.offsetDay(1);
-		}
-
-		if (vdt.isCurrentMonth())
-			this.days[new Date().getDate()-1].cls.today = true;
-
-		this.addEvent = function(day, addevt, border) {
-			if (!this.labels)
-				this.labels = [];
-
-			for (var lab of this.labels) {
-				if (lab.evt === addevt) {
-					lab.setCellEnd(day.index, border);
-					return;
-				}
-			}
-
-			lab = new VpLabel(addevt);
-			lab.setCellStart(this, day.index, border);
-			lab.setCellEnd(day.index, border);
-			this.labels.push(lab);
-		}
-
-		this.removeEvent = function(id) {
-			removeEventFromOwner(this, id);
-
-			for (var day of this.days)
-				day.removeEvent(id);
-		}
-
-		this.updateLayout = function() {
-			var slots = [];
-
-			if (this.labels) {
-				var lab;
-				for (lab of this.labels)
-					lab.updateLayout(slots);
-			}
-
-			for (var day of this.days)
-				day.updateLayout(slots);
-		}
-	}
-
-	VpMonth.prototype.onclickHdr = function() {
-		$window.open("https://www.google.com/calendar/r/month/" + this.gcal);
+		var week;
+		for (week of vpweeks)
+			week.updateLayout();
 	}
 
 	function VpWeek(vdt) {
@@ -931,7 +852,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 		function start() {
 			buffer = cfg.scroll_buffer;
-			vislength = cfg.month_count;
+			vislength = cfg.week_count;
 			pagelength = buffer + vislength + buffer;
 
 			$scope.vpgrid.fontscale = cfg.font_scale_pc/100;
@@ -956,8 +877,8 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 				vdt.offsetWeek(cfg.auto_scroll_offset);
 			}
 			else {
-				var off = ((cfg.first_month-1) - new Date().getWeek());
-				if (off > 0) off -= 12;
+				var off = ((cfg.first_week-1) - new Date().getWeek());
+				if (off > 0) off -= 52;
 				vdt.offsetWeek(off);
 			}
 		}
@@ -1283,11 +1204,6 @@ Date.prototype.getWeek = function() {
 	// Adjust to Thursday in week 1 and count number of weeks from date to week1.
 	return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
 		- 3 + (week1.getDay() + 6) % 7) / 7);
-}
-
-VpDate.prototype.isCurrentMonth = function() {
-	var today = new Date;
-	return (this.dt.getFullYear() == today.getFullYear() && this.dt.getMonth() == today.getMonth());
 }
 
 VpDate.prototype.isCurrentWeek = function() {

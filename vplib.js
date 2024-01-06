@@ -529,6 +529,8 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 
 		vpweeks = [];
 		vpdays = [];
+
+		debugger;
 		var vdtNext = new VpDate(vdt);
 		for (var i=0; i < pagelength; i++) {
 
@@ -1146,7 +1148,6 @@ VpDate.prototype.offsetMonth = function(off) {
 }
 
 VpDate.prototype.offsetWeek = function(off) {
-debugger
 	let w = this.dt.getWeek() + off;
 	var d = (1 + (w - 1) * 7); // 1st of January + 7 days for each week
 	let dateWeek = new Date(this.dt.getFullYear() , 0, d);

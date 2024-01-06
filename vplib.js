@@ -642,8 +642,8 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 			vdtDay.offsetDay(1);
 		}
 
-		if (vdt.isComposing())
-			this.days[new Date().getDate()-1].cls.today = true;
+		// TODO if (vdt.isComposing())
+		// 	this.days[new Date().getDate()-1].cls.today = true;
 
 		this.addEvent = function(day, addevt, border) {
 			if (!this.labels)

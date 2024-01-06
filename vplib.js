@@ -876,7 +876,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 			else {
 				var off = ((cfg.first_week-1) - new Date().getWeek());
 				if (off > 0) off -= 52;
-				vdt.offsetWeek(off);
+				//vdt.offsetWeek(off);
 			}
 		}
 

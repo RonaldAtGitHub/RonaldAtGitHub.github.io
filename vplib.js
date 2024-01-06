@@ -1274,7 +1274,7 @@ function VpDateWeek(yyyy, ww) {
 		this.dt =  new Date(yyyy, 0, d);
 	}
 	else {
-		this.dt = today;
+		this.dt = new Date();
 	}
 }
 

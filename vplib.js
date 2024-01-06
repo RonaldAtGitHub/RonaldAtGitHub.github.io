@@ -1274,8 +1274,7 @@ function VpDateWeek(yyyy, ww) {
 		this.dt =  new Date(yyyy, 0, d);
 	}
 	else {
-		var today = new Date;
-		this.dt = new Date(today.getFullYear(), today.getMonth());
+		this.dt = today;
 	}
 }
 

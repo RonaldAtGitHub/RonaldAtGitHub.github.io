@@ -42,7 +42,7 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 		title: "visual-planner",
 		week_count: 52,
 		scroll_buffer: 52,
-		auto_scroll: true,
+		auto_scroll: false,
 		auto_scroll_offset: -1,
 		first_week: 1,
 		hide_scrollbars: false,
@@ -525,7 +525,7 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		VpDate.weekends = cfg.weekends.split(',').map(s => parseInt(s));
 		VpDate.localemonth = cfg.month_names.split('-');
 
-		//vpGCal.setStartDate(vdt);
+		vpGCal.setStartDate(vdt);
 		ymdFirst = vdt.ymd();
 
 		vpweeks = [];

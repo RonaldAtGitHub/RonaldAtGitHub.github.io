@@ -920,11 +920,11 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		function getGridAreas(page) {
 			var gridareas = "";
 
-			for (month of page) {
+			for (week of page) {
 				if (view.column)
-					gridareas += (month.id + ' ');
+					gridareas += (week.id + ' ');
 				if (view.list)
-					gridareas += ('"' + month.id + '" ');
+					gridareas += ('"' + week.id + '" ');
 			}
 
 			if (view.column)
@@ -934,7 +934,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		}
 
 		function getVisInfo() {
-			var info = {months: [], index: null};
+			var info = {weeks: [], index: null};
 			var scrollpos = view.column ? scrollbox.scrollLeft : scrollbox.scrollTop;
 
 			var monthdivs = scrollbox.querySelectorAll(".vpmonth");
@@ -944,12 +944,12 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 				var monthsize = view.column ? hdr.offsetWidth : hdr.offsetHeight;
 
 				if (monthpos + (monthsize / 2) > scrollpos)
-					info.months.push(vpDiary.getPage()[i]);
+					info.weeks.push(vpDiary.getPage()[i]);
 
-				if (info.months.length == 1)
+				if (info.weeks.length == 1)
 					info.index = i;
 
-				if (info.months.length == vislength)
+				if (info.weeks.length == vislength)
 					break;
 			}
 
@@ -1023,8 +1023,8 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 			angular.copy($scope.vp.calendarlist, $window.vpprint.calendarlist);
 			angular.copy($scope.vpgrid, $window.vpprint.grid);
 
-			$window.vpprint.grid.page = visinfo.months;
-			$window.vpprint.grid.gridareas = getGridAreas(visinfo.months);
+			$window.vpprint.grid.page = visinfo.weeks;
+			$window.vpprint.grid.gridareas = getGridAreas(visinfo.weeks);
 
 			$window.open("vpprint.htm");
 		}

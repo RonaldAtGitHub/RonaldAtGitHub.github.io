@@ -43,7 +43,7 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 		week_count: 52,
 		scroll_buffer: 52,
 		auto_scroll: false,
-		auto_scroll_offset: -1,
+		auto_scroll_offset: 1,
 		first_week: 2,
 		hide_scrollbars: false,
 		same_row_height: false,
@@ -870,12 +870,12 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		function initDate() {
 			vdt = new VpDateWeek;
 			if (cfg.auto_scroll) {
-				//vdt.offsetWeek(cfg.auto_scroll_offset);
+				vdt.offsetWeek(cfg.auto_scroll_offset);
 			}
 			else {
 				var off = ((cfg.first_week-1) - new Date().getWeek());
 				if (off > 0) off -= 52;
-				//vdt.offsetWeek(off);
+				vdt.offsetWeek(off);
 			}
 		}
 
@@ -894,12 +894,11 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 				var monthdivs = box.querySelectorAll(".vpmonth");
 
 				if (view.column)
-					//scrollbox.scrollTo(monthdivs[buffer].firstElementChild.offsetLeft, 0);
+					scrollbox.scrollTo(monthdivs[buffer].firstElementChild.offsetLeft, 0);
 
 				if (view.list)
-					//scrollbox.scrollTo(0, monthdivs[buffer].firstElementChild.offsetTop);
+					scrollbox.scrollTo(0, monthdivs[buffer].firstElementChild.offsetTop);
 
-					debugger;
 				showGrid();
 			});
 		}

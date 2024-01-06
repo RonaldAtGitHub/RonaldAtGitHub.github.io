@@ -525,7 +525,7 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		VpDate.weekends = cfg.weekends.split(',').map(s => parseInt(s));
 		VpDate.localemonth = cfg.month_names.split('-');
 
-		vpGCal.setStartDate(vdt);
+		//vpGCal.setStartDate(vdt);
 		ymdFirst = vdt.ymd();
 
 		vpweeks = [];

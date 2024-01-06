@@ -1181,6 +1181,17 @@ VpDate.prototype.isWeekend = function() {
 	return (VpDate.weekends.includes(this.dt.getDay()));
 }
 
+VpDate.prototype.isPastWeek = function() {
+	var today = new Date;
+
+	if (this.dt.getYear() < today.getYear())
+		return true;
+
+	if (this.dt.getYear() > today.getYear())
+		return false;
+
+	return (this.dt.getWeek() < today.getWeek());
+}
 VpDate.prototype.isPastMonth = function() {
 	var today = new Date;
 

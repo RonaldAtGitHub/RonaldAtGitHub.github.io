@@ -851,7 +851,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 		function start() {
 			buffer = cfg.scroll_buffer;
-			vislength = cfg.week_count;
+			vislength = 52 // TODO cfg.week_count;
 			pagelength = buffer + vislength + buffer;
 
 			$scope.vpgrid.fontscale = cfg.font_scale_pc/100;

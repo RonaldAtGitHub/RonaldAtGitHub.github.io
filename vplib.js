@@ -51,7 +51,7 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 		weekends: "6,0",
 		first_day_of_week: 1,
 		font_scale_pc: 100,
-		past_opacity: 0.6,
+		past_opacity: 0.9,
 		month_names: "Jan-Feb-Mar-Apr-May-Jun-Jul-Aug-Sep-Oct-Nov-Dec",
 		proportional_events: false,
 		proportional_start_hour: 8,
@@ -516,6 +516,7 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	var cfg = $rootScope.vp.appdata;
 	var view = $rootScope.vp.gridview;
 	var vpmonths = [];
+	var vpweeks = [];
 	var vpdays = [];
 	var ymdFirst;
 	vpGCal.register(addEvent, removeEvent, updateEvents);
@@ -528,13 +529,20 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		ymdFirst = vdt.ymd();
 
 		vpmonths = [];
+		vpweeks = [];
 		vpdays = [];
 		var vdtNext = new VpDate(vdt);
 		for (var i=0; i < pagelength; i++) {
-			var month = new VpMonth(vdtNext);
-			month.index = vpmonths.length;
-			vpmonths.push(month);
-			vdtNext.offsetMonth(1);
+
+			var week = new VpWeek(vdtNext);
+			week.index = vpweeks.length;
+			vpweeks.push(week);
+			vdtNext.offsetDay(7);
+
+			// var month = new VpMonth(vdtNext);
+			// month.index = vpmonths.length;
+			// vpmonths.push(month);
+			// vdtNext.offsetMonth(1);
 			vpGCal.setEndDate(vdtNext);
 		}
 
@@ -676,6 +684,86 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 
 	VpMonth.prototype.onclickHdr = function() {
 		$window.open("https://www.google.com/calendar/r/month/" + this.gcal);
+	}
+
+	function VpWeek(vdt) {
+		this.id = "W-" + vdt.yw;
+		this.hdr = vdt.MonthTitle();
+		this.gcal = vdt.GCalURL();
+		this.year = vdt.dt.getFullYear();
+		this.days = [];
+		this.dayoffset = 0;
+		this.cls = {};
+
+		if (vdt.isPastWeek())
+			this.cls.past = true;
+
+		var vdtDay = new VpDate(vdt);
+		var w = vdtDay.getWeek();
+		while (w == vdtDay.getWeek()) {
+			var vpday = new VpDay(this, vdtDay);
+			vpday.index = this.days.length;
+
+			if (vpday.index == 0) {
+				if (cfg.align_weekends) {
+					this.dayoffset = vdtDay.DayOfWeek() - cfg.first_day_of_week;
+
+					if (this.dayoffset < 0)
+						this.dayoffset += 7;
+				}
+
+				vpday.cls["offset" + this.dayoffset] = true;
+			}
+
+			this.days.push(vpday);
+			vpdays.push(vpday);
+
+			vdtDay.offsetDay(1);
+		}
+
+		if (vdt.isComposing())
+			this.days[new Date().getDate()-1].cls.today = true;
+
+		this.addEvent = function(day, addevt, border) {
+			if (!this.labels)
+				this.labels = [];
+
+			for (var lab of this.labels) {
+				if (lab.evt === addevt) {
+					lab.setCellEnd(day.index, border);
+					return;
+				}
+			}
+
+			lab = new VpLabel(addevt);
+			lab.setCellStart(this, day.index, border);
+			lab.setCellEnd(day.index, border);
+			this.labels.push(lab);
+		}
+
+		this.removeEvent = function(id) {
+			removeEventFromOwner(this, id);
+
+			for (var day of this.days)
+				day.removeEvent(id);
+		}
+
+		this.updateLayout = function() {
+			var slots = [];
+
+			if (this.labels) {
+				var lab;
+				for (lab of this.labels)
+					lab.updateLayout(slots);
+			}
+
+			for (var day of this.days)
+				day.updateLayout(slots);
+		}
+	}
+
+	VpWeek.prototype.onclickHdr = function() {
+		$window.open("https://www.google.com/calendar/r/week/" + this.gcal);
 	}
 
 	function VpDay(vpmonth, vdt) {
@@ -1112,7 +1200,9 @@ function VpDate(src_date) {
 VpDate.prototype.ym = function() {
 	return this.dt.getFullYear() + VpDate.ymdstr[this.dt.getMonth()];
 }
-
+VpDate.prototype.yw = function() {
+	return this.dt.getFullYear() + VpDate.yweekstr[this.dt.getWeek()];
+}
 VpDate.prototype.ymd = function() {
 	return this.ym() + VpDate.ymdstr[this.dt.getDate()-1];
 }
@@ -1124,7 +1214,9 @@ VpDate.prototype.ymdnum = function() {
 VpDate.prototype.getMonth = function() {
 	return this.dt.getMonth()+1;
 }
-
+VpDate.prototype.getWeek = function() {
+	return this.dt.getWeek()+1;
+}
 VpDate.prototype.offsetDay = function(off) {
 	this.dt.setDate(this.dt.getDate() + off);
 }
@@ -1171,9 +1263,26 @@ VpDate.prototype.isPastMonth = function() {
 	return (this.dt.getMonth() < today.getMonth());
 }
 
+Date.prototype.getWeek = function() {
+	var date = new Date(this.getTime());
+	date.setHours(0, 0, 0, 0);
+	// Thursday in current week decides the year.
+	date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+	// January 4 is always in week 1.
+	var week1 = new Date(date.getFullYear(), 0, 4);
+	// Adjust to Thursday in week 1 and count number of weeks from date to week1.
+	return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+		- 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
 VpDate.prototype.isCurrentMonth = function() {
 	var today = new Date;
 	return (this.dt.getFullYear() == today.getFullYear() && this.dt.getMonth() == today.getMonth());
+}
+
+VpDate.prototype.isCurrentWeek = function() {
+	var today = new Date;
+	return (this.dt.getFullYear() == today.getFullYear() && this.dt.getWeek() == today.getWeek());
 }
 
 VpDate.prototype.MonthTitle = function() {
@@ -1193,6 +1302,13 @@ VpDate.prototype.GCalSpanURL = function(daycount) {
 VpDate.ymdstr = ["-01", "-02", "-03", "-04", "-05", "-06", "-07", "-08", "-09", "-10",
 	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
 	"-21", "-22", "-23", "-24", "-25", "-26", "-27", "-28", "-29", "-30", "-31"];
+
+VpDate.yweekstr = ["-01", "-02", "-03", "-04", "-05", "-06", "-07", "-08", "-09", "-10",
+	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
+	"-21", "-22", "-23", "-24", "-25", "-26", "-27", "-28", "-29", "-30", "-31", "-32",
+	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
+	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
+	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20"];
 
 VpDate.weekends = [0, 6];
 VpDate.localemonth = [];

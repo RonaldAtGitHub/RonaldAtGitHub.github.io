@@ -530,7 +530,6 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		vpweeks = [];
 		vpdays = [];
 
-		debugger;
 		var vdtNext = new VpDate(vdt);
 		for (var i=0; i < pagelength; i++) {
 
@@ -699,7 +698,6 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 
 	VpDay.prototype.addEvent = function(evt, border) {
 		if ((evt.duration > 1) || (cfg.single_day_as_multi_day && !evt.timed)) {
-			debugger;
 			this.week.addEvent(this, evt, border);
 			return;
 		}
@@ -884,7 +882,6 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 		function loadPage() {
 
-			debugger;
 			var vdtPage = new VpDate(vdt);
 			vdtPage.offsetWeek(-buffer);
 

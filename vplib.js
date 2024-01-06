@@ -1151,7 +1151,7 @@ debugger
 	var d = (1 + (w - 1) * 7); // 1st of January + 7 days for each week
 	let dateWeek = new Date(this.dt.getFullYear() , 0, d);
 
-	this.dt.setDate(dateWeek);
+	this.dt = dateWeek;
 }
 
 VpDate.prototype.toStartOfWeek = function(startday) {

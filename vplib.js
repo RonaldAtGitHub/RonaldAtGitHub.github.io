@@ -205,7 +205,7 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 	this.setGridView = function(sel) {
 		if (sel.column) setViewInfo('column', 'list', 'view');
 		if (sel.list) setViewInfo('list', 'column','week');
-		if (sel.view) setViewInfo('week', 'column' , 'list');
+		if (sel.week) setViewInfo('week', 'column' , 'list');
 		if (sel.expand) setViewInfo('expand', 'collapse');
 		if (sel.collapse) setViewInfo('collapse', 'expand');
 		if (sel.darktog) {

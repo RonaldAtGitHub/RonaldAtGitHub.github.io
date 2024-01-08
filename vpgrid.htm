@@ -334,6 +334,65 @@
 	</span>
 </span>
 
+<span ng-if="vp.gridview.week">
+	<style>
+	#vpgrid {
+		width: 100%;
+		height: {{vpgrid.scroll_size}}%;
+		grid-auto-flow: row;
+		grid-auto-rows: minmax(min-content, 1fr);
+		grid-template-columns: auto repeat(37, 1fr) 2em;
+	}
+	.vphdr {
+		grid-column: 1;
+	}
+	.vpftr {
+		grid-column: 39;
+	}
+	.vpday {
+		flex-direction: column;
+		min-width: 2em;
+	}
+	.vpday.offset0 {grid-column-start: 2;}
+	.vpday.offset1 {grid-column-start: 3;}
+	.vpday.offset2 {grid-column-start: 4;}
+	.vpday.offset3 {grid-column-start: 5;}
+	.vpday.offset4 {grid-column-start: 6;}
+	.vpday.offset5 {grid-column-start: 7;}
+	.vpday.offset6 {grid-column-start: 8;}
+	.vpnum {
+		width: fit-content;
+		width: -moz-fit-content;
+		padding: 0.25em 0.5em;
+		margin: 1px;
+	}
+	.vplabel.multiday {
+		height: calc(1.2em * {{vpgrid.multidayscale}});
+	width: 100%;
+	padding: 0 0.5em;
+	}
+	.vplabel.multiday.borderfirst {
+		border-top-left-radius: 1em;
+		border-bottom-left-radius: 1em;
+	}
+	.vplabel.multiday.borderlast {
+		border-top-right-radius: 1em;
+		border-bottom-right-radius: 1em;
+	}
+	.vplabel.multiday .material-icons {
+		padding: 0 0.2em 0 0.5em;
+	}
+	</style>
+
+	<span ng-if="vp.gridview.collapse">
+		<style>
+		.vplabel {
+			white-space: nowrap;
+		}
+		</style>
+	</span>
+</span>
+
 <div id="vpbox">
 	<div id="vpnavbar" ng-if="vp.gridoptions.shownavbar" title="View" ng-click="vpgrid.onclickNavbar($event)">
 		<div class="panel">
@@ -342,9 +401,9 @@
 	</div>
 	<div id="vpscrollbox" ng-class="vpgrid.sbox_cls" tabindex="0" ng-keydown="vpgrid.onkeydown($event)">
 		<div id="vpgrid" ng-class="vpgrid.cls">
-			<div ng-repeat="week in vpgrid.page" id="{{week.id}}" class="vpmonth" ng-class="month.cls">
+			<div ng-repeat="month in vpgrid.page" id="{{month.id}}" class="vpmonth" ng-class="month.cls">
 				<div class="vphdr vplink" ng-click="month.onclickHdr()">{{month.hdr}}</div>
-				<div ng-repeat="day in week.days" class="vpday" ng-class="day.cls">
+				<div ng-repeat="day in month.days" class="vpday" ng-class="day.cls">
 					<div class="vpnum vplink" ng-click="day.onclickNum($event)">{{day.num}}</div>
 					<div class="vpdaylabels" ng-if="day.labels" ng-style="day.labelboxstyle">
 						<div ng-repeat="label in day.labels | orderBy: ['evt.timestamp', 'evt.title']" class="vplabel vplink" title="{{label.evt.title}}" ng-style="label.style" ng-click="label.evt.edit()">
@@ -354,7 +413,7 @@
 					</div>
 				</div>
 				<div class="vpftr"></div>
-				<div ng-repeat="label in week.labels" class="vpmultilabelbox" ng-style="label.multiboxstyle">
+				<div ng-repeat="label in month.labels" class="vpmultilabelbox" ng-style="label.multiboxstyle">
 					<div class="vplabel vplink multiday" title="{{label.evt.title}}" ng-class="label.cls" ng-style="label.style" ng-click="label.evt.edit()">
 						<span class="vplabeltext" ng-if="vpgrid.multidaytext">{{label.evt.desc}}</span>
 						<span ng-if="label.evt.location"><span class="material-icons">add_location</span>{{label.evt.location}}</span>

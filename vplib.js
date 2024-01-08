@@ -40,18 +40,19 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 
 	var appdata = {
 		title: "visual-planner",
+		month_count: 6,
 		week_count: 52,
-		scroll_buffer: 52,
-		auto_scroll: false,
-		auto_scroll_offset: 1,
-		first_week: 2,
+		scroll_buffer: 6,
+		auto_scroll: true,
+		auto_scroll_offset: -1,
+		first_month: 1,
 		hide_scrollbars: false,
 		same_row_height: false,
 		align_weekends: true,
 		weekends: "6,0",
 		first_day_of_week: 1,
 		font_scale_pc: 100,
-		past_opacity: 0.9,
+		past_opacity: 0.6,
 		month_names: "Jan-Feb-Mar-Apr-May-Jun-Jul-Aug-Sep-Oct-Nov-Dec",
 		proportional_events: false,
 		proportional_start_hour: 8,
@@ -183,24 +184,28 @@ angular.module("vpApp").service("vpConfiguration", function($window, $location, 
 	if (stg)
 		gridview = JSON.parse(stg);
 	else {
-		setViewInfo('column');
+		setViewInfo('week');
 		setViewInfo('collapse');
 	}
 	$rootScope.vp.gridview = gridview;
 
-	function setViewInfo(add, del) {
+	function setViewInfo(add, del, del2) {
 		if (add)
 			gridview[add] = {checked: true};
 
 		if (del)
 			delete gridview[del];
 
+		if (del2)
+			delete gridview[del2];
+
 		$window.localStorage.setItem("vp-gridviewinfo", JSON.stringify(gridview));
 	}
 
 	this.setGridView = function(sel) {
-		if (sel.column) setViewInfo('column', 'list');
-		if (sel.list) setViewInfo('list', 'column');
+		if (sel.column) setViewInfo('column', 'list', 'view');
+		if (sel.list) setViewInfo('list', 'column','week');
+		if (sel.view) setViewInfo('week', 'column' , 'list');
 		if (sel.expand) setViewInfo('expand', 'collapse');
 		if (sel.collapse) setViewInfo('collapse', 'expand');
 		if (sel.darktog) {
@@ -318,7 +323,7 @@ angular.module("vpApp").service("vpGCal", function(vpConfiguration, $rootScope, 
 		isoSpan.start = vdt.dt.toISOString();
 	}
 
-	this.setEndDate = function(vdt) {
+	this.setEndDate = function(vdt) {9
 		isoSpan.end = vdt.dt.toISOString();
 	}
 
@@ -515,10 +520,15 @@ angular.module("vpApp").service("vpGCal", function(vpConfiguration, $rootScope, 
 angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal, $window) {
 	var cfg = $rootScope.vp.appdata;
 	var view = $rootScope.vp.gridview;
-	var vpweeks = [];
+	var vpmonths = [];
 	var vpdays = [];
 	var ymdFirst;
+	var vpweeks = [];
 	vpGCal.register(addEvent, removeEvent, updateEvents);
+
+	this.getView = function () {
+		return view;
+	}
 
 	this.makePage = function(vdt, pagelength) {
 		VpDate.weekends = cfg.weekends.split(',').map(s => parseInt(s));
@@ -527,16 +537,24 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 		vpGCal.setStartDate(vdt);
 		ymdFirst = vdt.ymd();
 
-		vpweeks = [];
+		vpmonths = [];
 		vpdays = [];
+		vpweeks = [];
 
 		var vdtNext = new VpDate(vdt);
 		for (var i=0; i < pagelength; i++) {
 
-			var week = new VpWeek(vdtNext);
-			week.index = vpweeks.length;
-			vpweeks.push(week);
-			vdtNext.offsetDay(7);
+			if (view.week) {
+				var week = new VpWeek(vdtNext);
+				week.index = vpweeks.length;
+				vpweeks.push(week);
+				vdtNext.offsetDay(7);
+			} else {
+				var month = new VpMonth(vdtNext);
+				month.index = vpmonths.length;
+				vpmonths.push(month);
+				vdtNext.offsetMonth(1);
+			}
 
 			vpGCal.setEndDate(vdtNext);
 		}
@@ -545,7 +563,11 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	}
 
 	this.getPage = function() {
-		return vpweeks;
+		if (view.week){
+			return vpweeks;
+		}
+		return vpmonths;
+
 	}
 
 	this.getMonth = function(i) {
@@ -588,9 +610,16 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	function removeEvent(id) {
 		$timeout.cancel(tmo);
 
-		var week;
-		for (week of vpweeks)
-			week.removeEvent(id);
+		if (view.week){
+			var week;
+			for (week of vpweeks)
+				week.removeEvent(id);
+		} else {
+			var month;
+			for (month of vpmonths)
+				month.removeEvent(id);
+		}
+
 
 		tmo = $timeout(updateLayout, 100);
 	}
@@ -601,10 +630,98 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 	}
 
 	function updateLayout() {
-		var week;
-		for (week of vpweeks)
-			week.updateLayout();
+		if (view.week){
+			var week;
+			for (week of vpweeks)
+				week.updateLayout();
+		} else {
+			var month;
+			for (month of vpmonths)
+				month.updateLayout();
+		}
+
 	}
+
+	function VpMonth(vdt) {
+		this.id = "M-" + vdt.ym();
+		this.hdr = vdt.MonthTitle();
+		this.gcal = vdt.GCalURL();
+		this.year = vdt.dt.getFullYear();
+		this.days = [];
+		this.dayoffset = 0;
+		this.cls = {};
+
+		if (vdt.isPastMonth())
+			this.cls.past = true;
+
+		var vdtDay = new VpDate(vdt);
+		var m = vdtDay.getMonth();
+		while (m == vdtDay.getMonth()) {
+			var vpday = new VpDay(this, vdtDay);
+			vpday.index = this.days.length;
+
+			if (vpday.index == 0) {
+				if (cfg.align_weekends) {
+					this.dayoffset = vdtDay.DayOfWeek() - cfg.first_day_of_week;
+
+					if (this.dayoffset < 0)
+						this.dayoffset += 7;
+				}
+
+				vpday.cls["offset" + this.dayoffset] = true;
+			}
+
+			this.days.push(vpday);
+			vpdays.push(vpday);
+
+			vdtDay.offsetDay(1);
+		}
+
+		if (vdt.isCurrentMonth())
+			this.days[new Date().getDate()-1].cls.today = true;
+
+		this.addEvent = function(day, addevt, border) {
+			if (!this.labels)
+				this.labels = [];
+
+			for (var lab of this.labels) {
+				if (lab.evt === addevt) {
+					lab.setCellEnd(day.index, border);
+					return;
+				}
+			}
+
+			lab = new VpLabel(addevt);
+			lab.setCellStart(this, day.index, border);
+			lab.setCellEnd(day.index, border);
+			this.labels.push(lab);
+		}
+
+		this.removeEvent = function(id) {
+			removeEventFromOwner(this, id);
+
+			for (var day of this.days)
+				day.removeEvent(id);
+		}
+
+		this.updateLayout = function() {
+			var slots = [];
+
+			if (this.labels) {
+				var lab;
+				for (lab of this.labels)
+					lab.updateLayout(slots);
+			}
+
+			for (var day of this.days)
+				day.updateLayout(slots);
+		}
+	}
+
+	VpMonth.prototype.onclickHdr = function() {
+		$window.open("https://www.google.com/calendar/r/month/" + this.gcal);
+	}
+
 
 	function VpWeek(vdt) {
 		this.id = "W-" + vdt.yw;
@@ -620,6 +737,7 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 
 		var vdtDay = new VpDate(vdt);
 		var w = vdtDay.getWeek();
+
 		while (w == vdtDay.getWeek()) {
 			var vpday = new VpDay(this, vdtDay);
 			vpday.index = this.days.length;
@@ -833,7 +951,6 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 	function fCtl($scope) {
 		var cfg = $scope.vp.appdata;
 		var view = $scope.vp.gridview;
-
 		var box = document.getElementById("vpbox");
 		var scrollbox = document.getElementById("vpscrollbox");
 		var vdt;
@@ -849,8 +966,14 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		});
 
 		function start() {
+
 			buffer = cfg.scroll_buffer;
-			vislength = 52 // TODO cfg.week_count;
+			if (view.week){
+				vislength = cfg.month_count;
+			} else {
+				vislength = cfg.week_count;
+			}
+
 			pagelength = buffer + vislength + buffer;
 
 			$scope.vpgrid.fontscale = cfg.font_scale_pc/100;
@@ -869,21 +992,39 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		}
 
 		function initDate() {
-			vdt = new VpDateWeek;
-			if (cfg.auto_scroll) {
-				vdt.offsetWeek(cfg.auto_scroll_offset);
-			}
-			else {
-				var off = ((cfg.first_week-1) - new Date().getWeek());
-				if (off > 0) off -= 52;
-				vdt.offsetWeek(off);
+			if (view.week) {
+				vdt = new VpDateWeek;
+				if (cfg.auto_scroll) {
+					vdt.offsetWeek(cfg.auto_scroll_offset);
+				} else {
+					var off = ((cfg.first_week - 1) - new Date().getWeek());
+					if (off > 0) off -= 52;
+					vdt.offsetWeek(off);
+				}
+			} else {
+				vdt = new VpDateMonth;
+
+				if (cfg.auto_scroll) {
+					vdt.offsetMonth(cfg.auto_scroll_offset);
+				}
+				else {
+					var off = ((cfg.first_month-1) - new Date().getMonth());
+					if (off > 0) off -= 12;
+					vdt.offsetMonth(off);
+				}
 			}
 		}
 
 		function loadPage() {
 
 			var vdtPage = new VpDate(vdt);
-			vdtPage.offsetWeek(-buffer);
+
+			if (vpDiary.getView().week){
+				vdtPage.offsetWeek(-buffer);
+			} else {
+				vdtPage.offsetMonth(-buffer);
+			}
+
 
 			vpDiary.makePage(vdtPage, pagelength);
 			$scope.vpgrid.page = vpDiary.getPage();
@@ -897,6 +1038,9 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 					scrollbox.scrollTo(monthdivs[buffer].firstElementChild.offsetLeft, 0);
 
 				if (view.list)
+					scrollbox.scrollTo(0, monthdivs[buffer].firstElementChild.offsetTop);
+
+				if (view.week)
 					scrollbox.scrollTo(0, monthdivs[buffer].firstElementChild.offsetTop);
 
 				showGrid();
@@ -920,11 +1064,13 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		function getGridAreas(page) {
 			var gridareas = "";
 
-			for (week of page) {
+			for (period of page) {
 				if (view.column)
-					gridareas += (week.id + ' ');
+					gridareas += (period.id + ' ');
 				if (view.list)
-					gridareas += ('"' + week.id + '" ');
+					gridareas += ('"' + period.id + '" ');
+				if (view.week)
+					gridareas += ('"' + period.id + '" ');
 			}
 
 			if (view.column)
@@ -934,7 +1080,7 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 		}
 
 		function getVisInfo() {
-			var info = {weeks: [], index: null};
+			var info = {periods: [], index: null};
 			var scrollpos = view.column ? scrollbox.scrollLeft : scrollbox.scrollTop;
 
 			var monthdivs = scrollbox.querySelectorAll(".vpmonth");
@@ -944,12 +1090,12 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 				var monthsize = view.column ? hdr.offsetWidth : hdr.offsetHeight;
 
 				if (monthpos + (monthsize / 2) > scrollpos)
-					info.weeks.push(vpDiary.getPage()[i]);
+					info.periods.push(vpDiary.getPage()[i]);
 
-				if (info.weeks.length == 1)
+				if (info.periods.length == 1)
 					info.index = i;
 
-				if (info.weeks.length == vislength)
+				if (info.periods.length == vislength)
 					break;
 			}
 
@@ -986,6 +1132,21 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 			});
 		}
 
+		this.onclickWeek = function() {
+			if (view.week)
+				return;
+
+			hideGrid();
+			$timeout(function() {
+				vpConfiguration.setGridView({week: true});
+
+				initDate();
+				loadPage();
+			});
+		}
+
+
+
 		this.onclickExpand = function() {
 			if (view.expand)
 				vpConfiguration.setGridView({collapse: true});
@@ -1009,7 +1170,11 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 			hideGrid();
 			$timeout(function() {
 				var visinfo = getVisInfo();
-				vdt.offsetWeek(visinfo.index - buffer);
+				if (view.week){
+					vdt.offsetWeek(visinfo.index - buffer);
+				} else {
+					vdt.offsetMonth(visinfo.index - buffer);
+				}
 				loadPage();
 			});
 		}
@@ -1023,8 +1188,8 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 			angular.copy($scope.vp.calendarlist, $window.vpprint.calendarlist);
 			angular.copy($scope.vpgrid, $window.vpprint.grid);
 
-			$window.vpprint.grid.page = visinfo.weeks;
-			$window.vpprint.grid.gridareas = getGridAreas(visinfo.weeks);
+			$window.vpprint.grid.page = visinfo.periods;
+			$window.vpprint.grid.gridareas = getGridAreas(visinfo.periods);
 
 			$window.open("vpprint.htm");
 		}
@@ -1066,11 +1231,16 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 			if (cfg.hide_scrollbars) {
 				if (view.column) {
-					var colwidth = (scrollbox.offsetWidth / cfg.week_count);
+					var colwidth = (scrollbox.offsetWidth / cfg.month_count);
 					scrollbox.scrollBy(evt.deltaY > 0 ? colwidth : -colwidth, 0);
 				}
 
 				if (view.list) {
+					var colheight = (scrollbox.offsetHeight / cfg.month_count);
+					scrollbox.scrollBy(0, evt.deltaY > 0 ? colheight : -colheight);
+				}
+
+				if (view.week) {
 					var colheight = (scrollbox.offsetHeight / cfg.week_count);
 					scrollbox.scrollBy(0, evt.deltaY > 0 ? colheight : -colheight);
 				}
@@ -1201,6 +1371,10 @@ VpDate.prototype.isPastMonth = function() {
 
 	return (this.dt.getMonth() < today.getMonth());
 }
+VpDate.prototype.isCurrentMonth = function() {
+	var today = new Date;
+	return (this.dt.getFullYear() == today.getFullYear() && this.dt.getMonth() == today.getMonth());
+}
 
 Date.prototype.getWeek = function() {
 	var date = new Date(this.getTime());
@@ -1239,10 +1413,9 @@ VpDate.ymdstr = ["-01", "-02", "-03", "-04", "-05", "-06", "-07", "-08", "-09", 
 
 VpDate.yweekstr = ["-01", "-02", "-03", "-04", "-05", "-06", "-07", "-08", "-09", "-10",
 	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
-	"-21", "-22", "-23", "-24", "-25", "-26", "-27", "-28", "-29", "-30", "-31", "-32",
-	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
-	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
-	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20"];
+	"-21", "-22", "-23", "-24", "-25", "-26", "-27", "-28", "-29", "-30",
+	"-31", "-32", "-33", "-34", "-35", "-36", "-37", "-38", "-39", "-40",
+	"-51", "-52"];
 
 VpDate.weekends = [0, 6];
 VpDate.localemonth = [];

@@ -107,6 +107,7 @@ body {
 
 <div id="banner">
 	<div class="panel" ng-show="vpapp.show.planner">
+		<div class="toolbtn material-icons" title="Week" ng-click="vpgrid.onclickWeek()" ng-class="vp.gridview.week">view_week</div>
 		<div class="toolbtn material-icons" title="Column" ng-click="vpgrid.onclickColumn()" ng-class="vp.gridview.column">view_column</div>
 		<div class="toolbtn material-icons" title="List" ng-click="vpgrid.onclickList()" ng-class="vp.gridview.list">view_list</div>
 		<div class="toolbtn material-icons" title="Expand" ng-click="vpgrid.onclickExpand()" ng-class="vp.gridview.expand">calendar_view_day</div>
@@ -152,6 +153,9 @@ body {
 		</p>
 		<p><select ng-model="vp.appdata.month_count" ng-options="x for (x, y) in vpapp.month_count_options"></select>
 			Number of months to display.  More can be scrolled into view using the mouse wheel or cursor keys.
+		</p>
+		<p><select ng-model="vp.appdata.week_count" ng-options="x for (x, y) in vpapp.week_count_options"></select>
+			Number of weeks to display.  More can be scrolled into view using the mouse wheel or cursor keys.
 		</p>
 		<p><select ng-model="vp.appdata.scroll_buffer" ng-options="x for (x, y) in vpapp.scroll_buffer_options"></select>
 			Scroll buffer.
@@ -239,6 +243,7 @@ body {
 <script type='text/javascript'>
 angular.module("vpApp").controller("vpController", function($scope, vpConfiguration) {
 	this.month_count_options = {"3": 3, "4": 4, "6": 6, "8": 8, "10": 10, "12": 12};
+	this.week_count_options = {"52": 52 };
 	this.scroll_buffer_options = {"No scrolling": 0, "3": 3, "6": 6, "12": 12};
 	this.event_background_options = {"Calendar": "cal", "Event": "evt", "White": "white", "Transparent": ""};
 	this.show = {planner: true};

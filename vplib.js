@@ -724,8 +724,8 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 
 
 	function VpWeek(vdt) {
-		this.id = "W-" + vdt.yw;
-		this.hdr = vdt.MonthTitle();
+		this.id = "W-" + vdt.yw();
+		this.hdr = vdt.yw();
 		this.gcal = vdt.GCalURL();
 		this.year = vdt.dt.getFullYear();
 		this.days = [];
@@ -743,15 +743,9 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 			vpday.index = this.days.length;
 
 			if (vpday.index == 0) {
-				if (cfg.align_weekends) {
-					this.dayoffset = vdtDay.DayOfWeek() - cfg.first_day_of_week;
-
-					if (this.dayoffset < 0)
-						this.dayoffset += 7;
-				}
-
-				vpday.cls["offset" + this.dayoffset] = true;
+				vpday.cls["offset" + 0] = true;
 			}
+
 
 			this.days.push(vpday);
 			vpdays.push(vpday);
@@ -759,8 +753,8 @@ angular.module("vpApp").service("vpDiary", function($rootScope, $timeout, vpGCal
 			vdtDay.offsetDay(1);
 		}
 
-		// TODO if (vdt.isComposing())
-		// 	this.days[new Date().getDate()-1].cls.today = true;
+		 // if (vdt.isComposing())
+			// this.days[new Date().getDate()-1].cls.today = true;
 
 		this.addEvent = function(day, addevt, border) {
 			if (!this.labels)
@@ -969,9 +963,9 @@ angular.module("vpApp").directive("vpGrid", function(vpConfiguration, vpDiary, $
 
 			buffer = cfg.scroll_buffer;
 			if (view.week){
-				vislength = cfg.month_count;
-			} else {
 				vislength = cfg.week_count;
+			} else {
+				vislength = cfg.month_count;
 			}
 
 			pagelength = buffer + vislength + buffer;
@@ -1415,6 +1409,7 @@ VpDate.yweekstr = ["-01", "-02", "-03", "-04", "-05", "-06", "-07", "-08", "-09"
 	"-11", "-12", "-13", "-14", "-15", "-16", "-17", "-18", "-19", "-20",
 	"-21", "-22", "-23", "-24", "-25", "-26", "-27", "-28", "-29", "-30",
 	"-31", "-32", "-33", "-34", "-35", "-36", "-37", "-38", "-39", "-40",
+	"-41", "-42", "-43", "-44", "-45", "-46", "-47", "-48", "-49", "-50",
 	"-51", "-52"];
 
 VpDate.weekends = [0, 6];
@@ -1458,7 +1453,7 @@ function VpDateWeek(yyyy, ww) {
 	}
 	else {
 		var today = new Date;
-		this.dt = new Date(today.getFullYear(), today.getMonth());
+		this.dt = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 	}
 }
 

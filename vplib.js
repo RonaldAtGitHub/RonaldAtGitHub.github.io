@@ -322,7 +322,6 @@ angular.module("vpApp").service("vpGCal", function (vpConfiguration, $rootScope,
     }
 
     this.setEndDate = function (vdt) {
-        9
         isoSpan.end = vdt.dt.toISOString();
     }
 
@@ -800,6 +799,7 @@ angular.module("vpApp").service("vpDiary", function ($rootScope, $timeout, vpGCa
         this.num = vdt.DayOfMonth();
         this.datevalue = vdt.dt.valueOf();
         this.week = vpweek;
+        this.month = vpweek;
         this.cls = {};
 
         if (vdt.isWeekend())

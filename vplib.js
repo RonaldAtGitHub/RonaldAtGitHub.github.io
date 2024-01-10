@@ -44,6 +44,7 @@ angular.module("vpApp").service("vpConfiguration", function ($window, $location,
         scroll_buffer: 6,
         auto_scroll: true,
         auto_scroll_offset: -1,
+        first_week: 1,
         first_month: 1,
         hide_scrollbars: false,
         same_row_height: false,
@@ -391,8 +392,10 @@ angular.module("vpApp").service("vpGCal", function (vpConfiguration, $rootScope,
                     if (cfg.show_timed_events)
                         fAdd(evt);
                 } else {
-                    if (cfg.show_all_day_events)
+                    if (cfg.show_all_day_events) {
                         fAdd(evt);
+                    }
+
                 }
             }
 
@@ -743,6 +746,8 @@ angular.module("vpApp").service("vpDiary", function ($rootScope, $timeout, vpGCa
                 vpday.cls["offset" + 0] = true;
             }
 
+            if (vpday.today)
+                vpday.cls.today = true;
 
             this.days.push(vpday);
             vpdays.push(vpday);
@@ -750,8 +755,6 @@ angular.module("vpApp").service("vpDiary", function ($rootScope, $timeout, vpGCa
             vdtDay.offsetDay(1);
         }
 
-        // if (vdt.isComposing())
-        // this.days[new Date().getDate()-1].cls.today = true;
 
         this.addEvent = function (day, addevt, border) {
             if (!this.labels)
@@ -801,10 +804,12 @@ angular.module("vpApp").service("vpDiary", function ($rootScope, $timeout, vpGCa
         this.week = vpweek;
         this.month = vpweek;
         this.cls = {};
+        this.today = vdt.isToday();
 
         if (vdt.isWeekend())
             this.cls.weekend = true;
     }
+
 
     VpDay.prototype.addEvent = function (evt, border) {
         if ((evt.duration > 1) || (cfg.single_day_as_multi_day && !evt.timed)) {
@@ -1254,7 +1259,8 @@ angular.module("vpApp").directive("vpGrid", function (vpConfiguration, vpDiary, 
             controller: fCtl,
             controllerAs: "vpgrid",
             link: fLink,
-            templateUrl: $sce.trustAsResourceUrl(url),
+            // templateUrl: $sce.trustAsResourceUrl(url),
+            templateUrl: '../vpgrid.htm',
             //replace: true,
             restrict: 'E'
         };
@@ -1275,17 +1281,22 @@ function VpDate(src_date) {
         this.dt = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     }
 }
-
 VpDate.prototype.ym = function () {
     return this.dt.getFullYear() + VpDate.ymdstr[this.dt.getMonth()];
 }
 VpDate.prototype.yw = function () {
+    //if end of week is in next year, use that year
+    if (this.dt.getWeek() === 1 && this.dt.getMonth() === 11){
+        return (this.dt.getFullYear() + 1) + "-01";
+    }
     return this.dt.getFullYear() + VpDate.yweekstr[this.dt.getWeek()];
 }
 VpDate.prototype.ymd = function () {
     return this.ym() + VpDate.ymdstr[this.dt.getDate() - 1];
 }
-
+VpDate.prototype.ywd = function () {
+    return this.ym() + VpDate.ymdstr[this.dt.getDate() - 1];
+}
 VpDate.prototype.ymdnum = function () {
     return this.ymd().replace(/-/g, '');
 }
@@ -1325,7 +1336,11 @@ VpDate.prototype.toStartOfYear = function () {
     this.dt.setMonth(0);
     this.dt.setDate(1);
 }
-
+VpDate.prototype.isToday = function () {
+    //return true if it is today
+    var today = new Date;
+    return this.dt.getFullYear() === today.getFullYear() && this.dt.getMonth() === today.getMonth() && this.dt.getDate() === today.getDate();
+}
 VpDate.prototype.DayOfMonth = function () {
     return this.dt.getDate();
 }
@@ -1376,6 +1391,7 @@ Date.prototype.getWeek = function () {
     return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
         - 3 + (week1.getDay() + 6) % 7) / 7);
 }
+
 
 VpDate.prototype.isCurrentWeek = function () {
     var today = new Date;
